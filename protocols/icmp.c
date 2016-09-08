@@ -117,7 +117,9 @@ int icmp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency,
 	} while(req_header->identifier != res_header->identifier &&
 			res_header->sequence != req_header->sequence);
 
-	if(result == NO_ERROR && memcmp(res_payload, payload, arguments.payload_size) != 0){
+	if(result == NO_ERROR && 
+	  (memcmp(res_payload, payload, arguments.payload_size) != 0 ||
+	   icmp_checksum(res_header, res_payload, arguments.payload_size) == req_header->checksum)){
 		result = ERROR_DATACORRUPT;
 	}
 
