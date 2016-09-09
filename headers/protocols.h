@@ -17,6 +17,20 @@ typedef struct {
 } __attribute((packed)) icmp_echo_t;
 
 typedef enum {
+	ICMP_ECHO = 0,
+	ICMP_DESTUNREACH = 3
+} icmp_type_t;
+
+typedef enum {
+	ICMP_CODE_NET = 0,
+	ICMP_CODE_HOST,
+	ICMP_CODE_PROTO,
+	ICMP_CODE_PORT,
+	ICMP_CODE_FRAG,
+	ICMP_CODE_ROUTE
+} icmp_code_t;
+
+typedef enum {
 	ERROR = INT_MIN,
 
 	ERROR_RECV,
@@ -25,6 +39,12 @@ typedef enum {
 	ERROR_SOCK,
 	ERROR_DATACORRUPT,
 	ERROR_TIMEOUT,
+	ERROR_DESTUNREACH_NET,
+	ERROR_DESTUNREACH_HOST,
+	ERROR_DESTUNREACH_PROTO,
+	ERROR_DESTUNREACH_PORT,
+	ERROR_DESTUNREACH_FRAG,
+	ERROR_DESTUNREACH_ROUTE,
 
 	NO_ERROR = 0
 } proto_result_t;

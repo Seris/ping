@@ -68,12 +68,22 @@ int icmp_create_sock(void){
 	}
 }
 
+int icmp_connect(int sockd){
+	return NO_ERROR;
+}
+
 int icmp_send(int sockd, void *payload, ping_time_t *start_time, void **data){
 	int result = NO_ERROR;
 	void *buffer;
 	icmp_echo_t *header = malloc(sizeof(icmp_echo_t));
 	int size = icmp_create_packet(header, payload, &buffer);
-	if(send(sockd, buffer, size, 0) < 0){
+	struct sockaddr_in addr = {
+		.sin_family = AF_INET,
+		.sin_port = 0
+	};
+	inet_aton(arguments.ip_address, &addr.sin_addr);
+
+	if(sendto(sockd, buffer, size, 0, (struct sockaddr*) &addr, sizeof(addr)) < 0){
 		result = ERROR_SEND;
 		free(header);
 	} else {
@@ -84,11 +94,48 @@ int icmp_send(int sockd, void *payload, ping_time_t *start_time, void **data){
 	return result;
 }
 
+int handle_icmp_packet(icmp_echo_t *req, void *req_pl, void *resd, int res_len, proto_result_t *result){
+	if(*result != NO_ERROR){
+		return -1;
+	}
+
+	icmp_echo_t *res = resd + IP_HEADER_SIZE;;
+	void *res_pl = resd + IP_HEADER_SIZE + sizeof(icmp_echo_t);
+	icmp_echo_t *orig_packet;
+	
+	int res_checksum = res->checksum;
+	res->checksum = 0;
+	
+	int ret = -1;
+
+	if(icmp_checksum(res, res_pl, res_len - sizeof(icmp_echo_t)) == res_checksum){
+		switch(res->type){
+			case ICMP_ECHO:
+			if(req->identifier == res->identifier && req->sequence == res->sequence){
+				if(memcmp(req_pl, res_pl, arguments.payload_size) == 0){
+					ret = 0;
+				} else {
+					*result = ERROR_DATACORRUPT;
+				}
+			}
+			break;
+	
+			case ICMP_DESTUNREACH:
+			orig_packet = res_pl + IP_HEADER_SIZE;
+			if(req->identifier == orig_packet->identifier && req->sequence == orig_packet->sequence){
+				*result = ERROR_DESTUNREACH_NET + res->code;
+			}
+			break;
+		}
+	}
+
+	return ret;
+}
+
 int icmp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency, void *data){
-	int size = IP_HEADER_SIZE + arguments.payload_size + sizeof(icmp_echo_t);
+	int size = (2 * IP_HEADER_SIZE + arguments.payload_size + sizeof(icmp_echo_t) * 2 + 64);
 	void *buffer = malloc(size);
-	void *cursor = buffer;
-	int recv_len = 0, d;
+	int d;
 	ping_time_t end_time;
 	proto_result_t result = NO_ERROR;
 	icmp_echo_t *req_header = data;
@@ -97,41 +144,29 @@ int icmp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency,
 
 	do {
 		do {
-			d = recv(sockd, cursor, size - recv_len, MSG_DONTWAIT);
-			if(d < 0){
-				if(errno != EAGAIN){
-					result = ERROR_RECV;
-				}
-			} else {
-				recv_len += d;
+			d = recvfrom(sockd, buffer, size, MSG_DONTWAIT, NULL, NULL);
+			if(d < 0 && errno != EAGAIN){
+				result = ERROR_RECV;
 			}
-		
+
 			end_time = time_ms();
 			*latency = compute_latency(&end_time, start_time);
 			if(*latency > arguments.timeoutMS){
 				result = ERROR_TIMEOUT;
 			}
-		} while(recv_len < size && result == NO_ERROR);
-		res_header = buffer + IP_HEADER_SIZE;
-		res_payload = buffer + IP_HEADER_SIZE + sizeof(icmp_echo_t);
-	} while(req_header->identifier != res_header->identifier &&
-			res_header->sequence != req_header->sequence);
+		} while(d < 1 && result == NO_ERROR);	
+	} while(handle_icmp_packet(req_header, payload, buffer, d, &result) < 0
+			&& result == NO_ERROR);
 
-	if(result == NO_ERROR && 
-	  (memcmp(res_payload, payload, arguments.payload_size) != 0 ||
-	   icmp_checksum(res_header, res_payload, arguments.payload_size) == req_header->checksum)){
-		result = ERROR_DATACORRUPT;
-	}
-
-	free(buffer);
 	free(data);
+	free(buffer);
 
 	return result;
 }
 
 protocol_stack_t icmp_stack = {
 	.sock    = &icmp_create_sock,
-	.connect = &udptcp_connect,
+		.connect = &icmp_connect,
 	.send    = &icmp_send,
 	.recv    = &icmp_recv
 };

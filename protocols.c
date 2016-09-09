@@ -139,5 +139,32 @@ void print_error(int error, int count){
 		case ERROR_TIMEOUT:
 		printf("timeout Cound not contact host (latency>%dms)\n", arguments.timeoutMS);
 		break;
+
+		case ERROR_DESTUNREACH_NET:
+		printf("unreachable Net Unreachable\n");
+		break;
+
+		case ERROR_DESTUNREACH_HOST:
+		printf("unreachable Host Unreachable\n");
+		break;
+
+		case ERROR_DESTUNREACH_PROTO:
+		printf("unreachable Protocol Unreachable\n");
+		break;
+
+		case ERROR_DESTUNREACH_PORT:
+		printf("unreachable Port Unreachable\n");
+		break;
+
+		case ERROR_DESTUNREACH_FRAG:
+		printf("unreachable Fragmentation needed but DF flags is set\n");
+		break;
+
+		case ERROR_DESTUNREACH_ROUTE:
+		printf("unreachable Source Route Failed\n");
+		break;
+
+		default:
+		printf("error An error as occured (code: %d)\n", error);
 	}
 }
