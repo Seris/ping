@@ -75,7 +75,7 @@ int execute_protocol(protocol_stack_t *stack){
 			count_error++;
 		}
 
-		sleep(1);
+		sleep(arguments.interval);
 
 	} while(++count <= arguments.count);
 

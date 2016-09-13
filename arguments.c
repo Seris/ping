@@ -11,14 +11,17 @@ args_t arguments = {
 	.protocol = PROTOCOL_ICMP,
 	.payload_size = 32,
 	.timeoutMS = 4000,
-	.count = 4
+	.count = 4,
+	.interval = 1
 };
 
 bool isValidNamedArg(char* arg){
-	return strlen(arg) > 3 && arg[2] == '=';
+	return strlen(arg) > 1;
 }
 
 void parseArguments(int argc, char* argv[]){
+	int error = 0;
+
 	for(int i = 1; i < argc; i++){
 
 		if(argv[i][0] == '-'){
@@ -53,8 +56,24 @@ void parseArguments(int argc, char* argv[]){
 					case 'c':
 					arguments.count = atol(&argv[i][3]);
 					break;
+
+					case 'i':
+					arguments.interval = atol(&argv[i][3]);
+					break;;
+
+					case 'h':
+					print_help();
+					exit(EXIT_SUCCESS);
+					break;
+
+					default:
+					printf("argument::unknown %s\n", argv[i]);
+					error = 1;
 				}
 
+			} else {
+				printf("arguments::unknown %s\n", argv[i]);
+				error = 1;
 			}
 
 		} else {
@@ -64,8 +83,13 @@ void parseArguments(int argc, char* argv[]){
 	}
 
 	if(arguments.ip_address == NULL){
-		printf("arguments::mandatory\nNo IP address provided\n");
+		printf("arguments::mandatory No IP address provided\n");
+		print_help();
 		exit(EXIT_FAILURE);
 	}
 
+	if(error){
+		print_help();
+		exit(EXIT_FAILURE);
+	}
 }

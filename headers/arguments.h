@@ -16,8 +16,10 @@ typedef struct {
 	uint32_t payload_size;
 	uint32_t timeoutMS;
 	uint32_t count;
+	uint32_t interval;
 } args_t;
 
 void parseArguments(int argc, char* argv[]);
+void print_help(void);
 
 #endif
