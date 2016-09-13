@@ -54,6 +54,17 @@ typedef int (*connect_ft)(int sockd);
 typedef int (*send_ft)(int sockd, void *payload, ping_time_t *start, void **data);
 typedef int (*recv_ft)(int sockd, void *payload, ping_time_t *start, float *latency, void *data);
 
+/**
+ * protocol_stack_t
+ * This structure define how a socket is managed through the execution of the echo protocol.
+ *   1. Socket creation
+ *   2. Connection to the target
+ *   3. Sending the echo request to the target
+ *   4. Receiving the response of the target or managing timeout
+ * This was created because i wanted this program to be extensible and because the comportement we must
+ * adopt when receiving the response, for exemple, change a lot in regards of the used protocol (udp,tcp,icmp..)
+ * For that, i use function pointer which are defined on top of this comment.
+ **/
 typedef struct {
 	socket_ft  sock;
 	connect_ft connect;
@@ -61,14 +72,8 @@ typedef struct {
 	recv_ft    recv;
 } protocol_stack_t;
 
-int tcp_create_sock(void);
-int udp_create_sock(void);
-int udptcp_connect(int sockd);
-int udptcp_send(int sockd, void *payload, ping_time_t *start_time, void **data);
-int udptcp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency, void *data);
-
 protocol_stack_t* get_protocol_stack(void);
-int execute_protocol(protocol_stack_t* stack);
+void execute_protocol(protocol_stack_t* stack);
 void print_error(int error, int count);
 
 #endif

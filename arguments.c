@@ -15,67 +15,59 @@ args_t arguments = {
 	.interval = 1
 };
 
-bool isValidNamedArg(char* arg){
-	return strlen(arg) > 1;
-}
-
+/**
+ * parseArguments Parse command-line options and adjust arguments
+ * @params <int>    argc : Number of arguments
+ * @params <char**> argv : Lists of arguments
+ * @flags MayNotReturn
+ */
 void parseArguments(int argc, char* argv[]){
 	int error = 0;
 
 	for(int i = 1; i < argc; i++){
-
 		if(argv[i][0] == '-'){
-	
-			if(isValidNamedArg(argv[i])){
+			switch(argv[i][1]){
+				case 'm':
+				switch(argv[i][3]){
+					case PROTOCOL_TCP:
+					arguments.protocol = PROTOCOL_TCP;
+					break;
 			
-				switch(argv[i][1]){
-					case 'm':
-					switch(argv[i][3]){
-						case PROTOCOL_TCP:
-						arguments.protocol = PROTOCOL_TCP;
-						break;
-				
-						case PROTOCOL_UDP:
-						arguments.protocol = PROTOCOL_UDP;
-						break;
-					}
+					case PROTOCOL_UDP:
+					arguments.protocol = PROTOCOL_UDP;
 					break;
-
-					case 'p':
-					arguments.port = atol(&argv[i][3]);
-					break;
-
-					case 's':
-					arguments.payload_size = atol(&argv[i][3]);
-					break;
-
-					case 't':
-					arguments.timeoutMS = atol(&argv[i][3]);
-					break;
-
-					case 'c':
-					arguments.count = atol(&argv[i][3]);
-					break;
-
-					case 'i':
-					arguments.interval = atol(&argv[i][3]);
-					break;;
-
-					case 'h':
-					print_help();
-					exit(EXIT_SUCCESS);
-					break;
-
-					default:
-					printf("argument::unknown %s\n", argv[i]);
-					error = 1;
 				}
+				break;
 
-			} else {
-				printf("arguments::unknown %s\n", argv[i]);
+				case 'p':
+				arguments.port = atol(&argv[i][3]);
+				break;
+
+				case 's':
+				arguments.payload_size = atol(&argv[i][3]);
+				break;
+
+				case 't':
+				arguments.timeoutMS = atol(&argv[i][3]);
+				break;
+
+				case 'c':
+				arguments.count = atol(&argv[i][3]);
+				break;
+
+				case 'i':
+				arguments.interval = atol(&argv[i][3]);
+				break;;
+
+				case 'h':
+				print_help();
+				exit(EXIT_SUCCESS);
+				break;
+
+				default:
+				printf("argument::unknown %s\n", argv[i]);
 				error = 1;
 			}
-
 		} else {
 			arguments.ip_address = argv[i];
 		}

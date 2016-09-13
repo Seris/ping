@@ -13,6 +13,10 @@
 extern args_t arguments;
 extern protocol_stack_t udp_stack, tcp_stack, icmp_stack;
 
+/**
+ * gen_random_payload
+ * @params <uint8_t*> payload : Pointer where "arguments.payload_size" bytes are allocated for us
+ */
 void gen_random_payload(uint8_t *payload){
 	srand(time(NULL));
 	bzero(payload, arguments.payload_size);
@@ -21,7 +25,18 @@ void gen_random_payload(uint8_t *payload){
 	}
 }
 
-int execute_protocol(protocol_stack_t *stack){
+/**
+ * execute_protocol This function take a protocol stack for argument and execute it :
+ *					     - create a socket
+ *                       - connect the socket
+ *                       - send the payload
+ *                       - receive the response/error or manage timeout
+ *                       - display response
+ *                  After executing "arguments.count" times the stack, it display statistics :
+ *                 	min, max, average, number of packet transmistted succesfully and number of errors
+ * @params <protocol_stack_t*> stack : see protocols.h for more information
+ **/
+void execute_protocol(protocol_stack_t *stack){
 	int sockd, count = 1, error;
 	uint8_t *payload = (uint8_t*) malloc(arguments.payload_size);
 	float latency, average_latency = 0, min_latency = FLT_MAX, max_latency = -1;
@@ -89,6 +104,10 @@ int execute_protocol(protocol_stack_t *stack){
 	}
 }
 
+/**
+ * get_protocol_stack Get the correct protocol stack indicated in arguments.protocol
+ * @return A point to the correct protocol_stack_t (see protocols.h for more information)
+ **/
 protocol_stack_t* get_protocol_stack(void){
 	protocol_stack_t* stack;
 	switch(arguments.protocol){
@@ -112,6 +131,11 @@ protocol_stack_t* get_protocol_stack(void){
 	return stack;
 }
 
+/**
+ * print_error Print the correct error message
+ * @params <int> error : Error code
+ * @params <int> count : The request id
+ **/
 void print_error(int error, int count){
 	printf("#%d error::", count);
 	fflush(stdout);

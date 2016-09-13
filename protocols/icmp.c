@@ -15,6 +15,14 @@
 
 extern args_t arguments;
 
+/**
+ * icmp_checksum Compute the checksum of header and data of the icmp packet
+ * (cf. RFC782 https://tools.ietf.org/html/rfc792 for more information on that part)
+ * @params <icmp_echo_t*> header : header of the icmp packet
+ * @params <uint16_t*> data : Payload of the icmp packet
+ * @params <int> datalen : Length of the payload pointed by data
+ * @return <uint16_t> Checksum of the icmp packet
+ **/
 uint16_t icmp_checksum(icmp_echo_t *header, uint16_t *data, int datalen){
 	uint32_t checksum = 0;
 	uint16_t *cursor;
@@ -40,6 +48,14 @@ uint16_t icmp_checksum(icmp_echo_t *header, uint16_t *data, int datalen){
 	return (uint16_t) ~checksum;
 }
 
+/**
+ * icmp_create_packet Create the ICMP packet that will be sent to the target
+ * @params <icmp_echo_t*> header : The header of the packet
+ * @params <void*> payload : The payload of arguments.payload_size length
+ * @params <void**> buf : A pointer to the pointer that will point to the buffer
+                          that will be sent. Must be free bu the user
+ * @return <int> Size of the buffer
+ **/
 int icmp_create_packet(icmp_echo_t *header, void *payload, void **buf){
 	ping_time_t time = time_ms();
 	int size = arguments.payload_size + sizeof(icmp_echo_t);
@@ -94,6 +110,16 @@ int icmp_send(int sockd, void *payload, ping_time_t *start_time, void **data){
 	return result;
 }
 
+/**
+ * handle_icmp_packet When receiving a packet, this function parse it, check if it's a response for our ping, an error for us etc..
+ * @params <icmp_echo_t*> req : the header of the request we've done
+ * @params <void*> req_pl : the payload we sent the the target
+ * @params <void*> resd : raw buffer of the response
+ * @params <int> res_len : size of the response
+ * @params <proto_result_t*> result : possibly set an error message in it to be parsed by execute_protocol
+ *                                    (see in protocols.c for more information)
+ * @return <int> : Return 0 if we got a response to our ping, -1 otherwise
+ **/
 int handle_icmp_packet(icmp_echo_t *req, void *req_pl, void *resd, int res_len, proto_result_t *result){
 	if(*result != NO_ERROR){
 		return -1;
@@ -166,7 +192,7 @@ int icmp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency,
 
 protocol_stack_t icmp_stack = {
 	.sock    = &icmp_create_sock,
-		.connect = &icmp_connect,
+	.connect = &icmp_connect,
 	.send    = &icmp_send,
 	.recv    = &icmp_recv
 };
