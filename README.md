@@ -23,3 +23,5 @@ make && cp ping /usr/local/bin/pingtl
 The code in this repository is under the GPLv3 license.
 See the LICENSE file for more information.
 
+[Link to repository](https://github.com/seris/ping)
+
