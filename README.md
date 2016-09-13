@@ -17,4 +17,9 @@ Compile in Debian 8.5
 ### Compile it
 ```
 make && cp ping /usr/local/bin/pingtl
+```
+
+## License
+The code in this repository is under the GPLv3 license.
+See the LICENSE file for more information.
 
