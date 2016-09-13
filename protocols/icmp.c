@@ -165,8 +165,6 @@ int icmp_recv(int sockd, void *payload, ping_time_t *start_time, float *latency,
 	ping_time_t end_time;
 	proto_result_t result = NO_ERROR;
 	icmp_echo_t *req_header = data;
-	icmp_echo_t *res_header;
-	void *res_payload;
 
 	do {
 		do {
